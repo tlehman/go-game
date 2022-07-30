@@ -1,6 +1,6 @@
 CREATE TABLE users(
     id         int primary key,
-    created_at datetime
+    created_at datetime,
     handle     text,
     roles      text
 );

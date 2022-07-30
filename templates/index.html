@@ -12,14 +12,14 @@
     <img class="logo" src="/static/go-gophers.png" />
 		
     {{ if .IsLoggedIn }}
-      <p>Hello, {{ .LoggedInUser.Name }}</p>
+      <p>Hello, {{ .LoggedInUser.Handle }}</p>
 
       <div id="root"></div>
 
       <p>Here are a list of all registered users
         <ul>
         {{ range .RegisteredUsers }}
-          <li>{{ .Name }}</li>
+          <li>{{ .Handle }}</li>
         {{ end }}
         </ul>
       </p>
