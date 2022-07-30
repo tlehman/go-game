@@ -1,0 +1,12 @@
+body {
+	text-align: center;
+  background-color: #eaddc0;
+  //background-color: #DCB35C;
+  font-family: 'Courier';
+}
+
+
+.logo { 
+  width: 100%;
+  max-width: 400px;
+}
