@@ -1,0 +1,19 @@
+{{ define "content" }}
+
+    <div id="root"></div>
+
+    <p>List of games:
+    <ul>
+    {{ range .Games }}
+        <li>
+            <a href="/games/{{ .Id }}">
+                Game #{{.Id}} (
+                    ️⚫️: {{ .BlackUserId }}, 
+                    ️⚪️: {{ .whiteUserId }}
+                )
+            </a>
+        </li>
+    {{ end }}
+    </ul>
+    </p>
+{{ end }}

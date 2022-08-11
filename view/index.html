@@ -1,0 +1,17 @@
+  {{ define "content" }}
+    {{ if .IsLoggedIn }}
+      <p>Hello, {{ .LoggedInUser.Handle }}</p>
+
+      <div id="root"></div>
+
+      <p>Here are a list of all registered users
+        <ul>
+        {{ range .RegisteredUsers }}
+          <li>{{ .Handle }}</li>
+        {{ end }}
+        </ul>
+      </p>
+    {{ else }}
+      <!-- not logged in-->
+    {{ end }}
+  {{ end }}

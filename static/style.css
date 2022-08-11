@@ -1,12 +1,33 @@
 body {
 	text-align: center;
   background-color: #eaddc0;
-  //background-color: #DCB35C;
-  font-family: 'Courier';
+  font-family: Arial, Helvetica, sans-serif;
 }
-
-
-.logo { 
-  width: 100%;
-  max-width: 400px;
+header {
+  position: relative;
+  text-align: left;
+  height: 100px;
+}
+header .headers {
+  float: left;
+}
+header h2 {
+  font-size: medium;
+}
+header img { 
+  max-height: 100px;
+  float: right;
+  top: 0;
+}
+nav {
+  padding: 0.5em;
+}
+nav ul { 
+  list-style-type: none;
+}
+nav a {
+  padding: 1em; 
+  border-color: brown;
+  border-style: solid;
+  border-width: 1px;
 }

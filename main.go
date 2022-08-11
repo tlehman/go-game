@@ -1,51 +1,14 @@
 package main
 
 import (
+	"errors"
 	"html/template"
 	"io"
 	"net/http"
-	"time"
-
-	"crawshaw.io/sqlite"
-	"crawshaw.io/sqlite/sqlitex"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
-
-var dbpool *sqlitex.Pool
-
-func initEcho() *echo.Echo {
-	e := echo.New()
-
-	// pre-compile the templates
-	t := &Template{
-		templates: template.Must(template.ParseGlob("templates/*.html")),
-	}
-	e.Renderer = t // register the templates with Echo
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Static("/static", "static")
-	e.GET("/", index)
-	return e
-}
-
-func initDbPool() {
-	poolSize := 10 // this is the number of connections in the pool
-	var err error
-	dbpool, err = sqlitex.Open("db/go-game.db", sqlite.SQLITE_OPEN_READWRITE, poolSize)
-	if err != nil {
-		panic(err)
-	}
-}
-
-type Template struct {
-	templates *template.Template
-}
-
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
-}
 
 func main() {
 	e := initEcho()
@@ -55,39 +18,85 @@ func main() {
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
-func index(c echo.Context) error {
-	conn := dbpool.Get(c.Request().Context())
-	if conn == nil {
-		return nil
-	}
-	// query all registered users
-	var registeredUsers []User = make([]User, 0)
-	defer dbpool.Put(conn) // put the conn back in the pool
-	stmt := conn.Prep("SELECT id, handle FROM users;")
-	var user User
-	for {
-		if hasRow, err := stmt.Step(); err != nil {
-			c.Logger().Fatal(err)
-		} else if !hasRow {
-			break
-		}
-		user = User{
-			Id:     int(stmt.GetInt64("id")),
-			Handle: stmt.GetText("handle"),
-		}
-		registeredUsers = append(registeredUsers, user)
-	}
+func initEcho() *echo.Echo {
+	e := echo.New()
+	e = initTemplates(e)
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Static("/static", "static")
+	e.GET("/games/new", gamesNew)
+	e.GET("/games", games)
+	e.GET("/", index)
+	return e
+}
 
-	data := struct {
-		Time            time.Time
-		IsLoggedIn      bool
-		LoggedInUser    User
-		RegisteredUsers []User
-	}{
-		Time:            time.Now(),
-		IsLoggedIn:      true,
-		LoggedInUser:    user,
-		RegisteredUsers: registeredUsers,
+func initTemplates(e *echo.Echo) *echo.Echo {
+	// Instantiate a template registry with an array of template set
+	// Ref: https://gist.github.com/rand99/808e6e9702c00ce64803d94abff65678
+	templates := make(map[string]*template.Template)
+	templates["index.html"] = template.Must(template.ParseFiles("view/index.html", "view/base.html"))
+	templates["games_new.html"] = template.Must(template.ParseFiles("view/games_new.html", "view/base.html"))
+	templates["games.html"] = template.Must(template.ParseFiles("view/games.html", "view/base.html"))
+	e.Renderer = &TemplateRegistry{templates}
+	return e
+}
+
+type TemplateRegistry struct {
+	templates map[string]*template.Template
+}
+
+func (t *TemplateRegistry) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	tmpl, ok := t.templates[name]
+	if !ok {
+		err := errors.New("Template not found -> " + name)
+		return err
+	}
+	return tmpl.ExecuteTemplate(w, "base.html", data)
+}
+
+type Data struct {
+	Header          string
+	IsLoggedIn      bool
+	LoggedInUser    *User
+	RegisteredUsers *[]User
+	Games           *[]Game
+}
+
+func index(c echo.Context) error {
+	// query all registered users
+	//registeredUsers, err := selectAllUsers(c.Request().Context())
+	//if err != nil {
+	//	return err
+	//}
+	//user := registeredUsers[0]
+	data := Data{
+		Header:          "written in Go",
+		IsLoggedIn:      false,
+		LoggedInUser:    nil,
+		RegisteredUsers: nil,
 	}
 	return c.Render(http.StatusOK, "index.html", data)
+}
+
+func gamesNew(c echo.Context) error {
+	data := Data{
+		IsLoggedIn:      false,
+		LoggedInUser:    nil,
+		RegisteredUsers: nil,
+		Header:          "New Game",
+	}
+	return c.Render(http.StatusOK, "games_new.html", data)
+}
+
+func games(c echo.Context) error {
+	games, err := selectAllGames(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	data := Data{
+		IsLoggedIn: false,
+		Header:     "New Game",
+		Games:      &games,
+	}
+	return c.Render(http.StatusOK, "games.html", data)
 }

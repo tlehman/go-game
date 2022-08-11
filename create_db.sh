@@ -1,3 +1,3 @@
 #!/bin/sh
 
-sqlite3 db/go-game.db < schema.sql
+(cd db && (sqlite3 go-game.db < schema.sql))

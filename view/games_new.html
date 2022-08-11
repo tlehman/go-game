@@ -1,0 +1,11 @@
+{{ define "content" }}
+game board
+
+<form action="/games" method="post">
+    <label for="blackUserId">⚫️</label>
+    <input name="blackUserId" type="text"></input>
+    <label for="whiteUserId">⚪️</label>
+    <input name="whiteUserId" type="text"></input>
+    <input type="submit">Create</form>
+</form>
+{{ end }}
